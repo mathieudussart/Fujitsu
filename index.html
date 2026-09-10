@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Friction Rooms | Fujitsu Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;800;900&family=Noto+Sans+JP:wght@100;400;900&family=Libre+Barcode+39+Text&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === VARIABLES & THEME === */
+        :root {
+            --bg-dark: #020203;
+            --fujitsu-red: #E60012;
+            --tech-purple: #7209B7;
+            --tech-cyan: #4CC9F0;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --core-color: rgba(230, 0, 18, 0.4); 
+            --core-glow: rgba(230, 0, 18, 0.6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-dark); color: #FFF;
+            min-height: 100vh; overflow: hidden; position: relative;
+        }
+
+        /* === 1. PRELOADER : PORTES SHOJI TECH === */
+        #shoji-doors {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;
+            display: flex; justify-content: center; align-items: center; pointer-events: none;
+        }
+        .door {
+            position: absolute; width: 50%; height: 100%; background: #050507;
+            transition: transform 1.2s cubic-bezier(0.85, 0, 0.15, 1);
+            display: flex; align-items: center; overflow: hidden;
+        }
+        .door-left { left: 0; border-right: 2px solid var(--fujitsu-red); justify-content: flex-end; }
+        .door-right { right: 0; border-left: 2px solid var(--fujitsu-red); justify-content: flex-start; }
+        .door-logo { font-size: 2rem; font-weight: 900; color: #FFF; position: absolute; }
+        .door-left .door-logo { right: -40px; }
+        .door-right .door-logo { left: -45px; color: var(--fujitsu-red); }
+
+        .doors-open .door-left { transform: translateX(-100%); }
+        .doors-open .door-right { transform: translateX(100%); }
+
+        /* === 2. BACKGROUND JAPONAIS === */
+        .jp-watermark {
+            position: absolute; top: 10%; right: 5%;
+            font-family: 'Noto Sans JP', sans-serif; font-size: 4rem; font-weight: 900;
+            color: rgba(255, 255, 255, 0.03); writing-mode: vertical-rl;
+            letter-spacing: 15px; user-select: none; z-index: 0;
+        }
+        .grid-overlay {
+            position: absolute; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 40px 40px; z-index: 0; opacity: 0.5;
+        }
+
+        /* === 3. HEADER MOBILE === */
+        header {
+            position: relative; z-index: 10; padding: 25px 20px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .brand-logo { font-weight: 800; font-size: 1.2rem; letter-spacing: -0.5px; }
+        .brand-logo span { color: var(--fujitsu-red); font-size: 1.5rem; line-height: 0; position: relative; top: 2px;}
+        .iscom-tag { font-size: 0.7rem; color: #666; letter-spacing: 2px; text-align: right; }
+
+        /* === 4. L'ARTEFACT CENTRAL (CUBE 3D) === */
+        .artifact-container {
+            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 5; perspective: 1000px;
+            display: flex; justify-content: center; align-items: center;
+            transition: transform 1.5s cubic-bezier(0.85, 0, 0.15, 1);
+        }
+        /* Classe ajoutée pour l'animation d'explosion */
+        .artifact-container.overdrive { transform: translate(-50%, -50%) scale(1.6); }
+        
+        .halo {
+            position: absolute; width: 250px; height: 250px; border-radius: 50%;
+            background: var(--core-glow); filter: blur(60px); opacity: 0.4;
+            transition: all 1s ease;
+        }
+        .artifact-container.overdrive .halo { filter: blur(80px); opacity: 1; transform: scale(1.5); }
+
+        .cube {
+            position: relative; width: 140px; height: 140px;
+            transform-style: preserve-3d;
+            animation: rotateCube 15s infinite linear;
+            transition: transform 0.5s ease;
+        }
+        /* Mode Overdrive = rotation ultra rapide */
+        .cube.spinning-fast { animation: rotateCube 0.4s infinite linear; }
+        
+        .face {
+            position: absolute; width: 140px; height: 140px;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+        
+        .core {
+            position: absolute; top: 25%; left: 25%; width: 50%; height: 50%;
+            background: var(--core-color); box-shadow: 0 0 30px var(--core-glow);
+            transition: all 0.5s ease; transform: translateZ(70px);
+        }
+
+        .front  { transform: rotateY(  0deg) translateZ(70px); }
+        .back   { transform: rotateY(180deg) translateZ(70px); }
+        .right  { transform: rotateY( 90deg) translateZ(70px); }
+        .left   { transform: rotateY(-90deg) translateZ(70px); }
+        .top    { transform: rotateX( 90deg) translateZ(70px); }
+        .bottom { transform: rotateX(-90deg) translateZ(70px); }
+
+        @keyframes rotateCube {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(180deg); }
+        }
+
+        /* === L'ÉCLAIR BLANC (FLASH) === */
+        #white-flash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #FFFFFF; z-index: 100; opacity: 0; pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        /* === 5. LE TICKET VIP HOLOGRAPHIQUE (RÉCOMPENSE FINALE) === */
+        #vip-pass-container {
+            position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 50; width: 85%; max-width: 350px;
+            perspective: 1000px; display: none; opacity: 0;
+            transition: opacity 1s ease;
+        }
+        
+        .vip-card {
+            background: rgba(20, 20, 25, 0.7); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 24px;
+            padding: 30px 25px; box-shadow: 0 40px 80px rgba(0,0,0,0.8), inset 0 2px 10px rgba(255,255,255,0.2);
+            position: relative; overflow: hidden;
+            animation: floatingPass 4s ease-in-out infinite;
+        }
+        
+        /* Reflet sur la carte */
+        .vip-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg); animation: shine 6s infinite; pointer-events: none;
+        }
+
+        .vip-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 25px;}
+        .vip-header .logo { font-weight: 900; font-size: 1.1rem; }
+        .vip-header .logo span { color: var(--fujitsu-red); }
+        .vip-badge { background: var(--tech-cyan); color: #000; font-size: 0.6rem; font-weight: 800; padding: 4px 10px; border-radius: 12px; letter-spacing: 2px;}
+
+        .vip-body { text-align: left; }
+        .vip-label { font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        .vip-name { font-size: 1.8rem; font-weight: 900; color: #FFF; text-transform: uppercase; margin-bottom: 25px; word-wrap: break-word; line-height: 1.1; }
+        
+        .vip-details { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .vip-details div p { font-size: 0.9rem; font-weight: 600; color: var(--tech-cyan); }
+
+        .vip-footer { text-align: center; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 20px; }
+        .barcode { font-family: 'Libre Barcode 39 Text', cursive; font-size: 3.5rem; color: #FFF; opacity: 0.8; height: 60px; line-height: 60px;}
+
+        @keyframes floatingPass { 0% { transform: translateY(0) rotateY(-5deg) rotateX(5deg); } 50% { transform: translateY(-15px) rotateY(5deg) rotateX(-5deg); } 100% { transform: translateY(0) rotateY(-5deg) rotateX(5deg); } }
+        @keyframes shine { 0% { left: -100%; top: -100%; } 20% { left: 100%; top: 100%; } 100% { left: 100%; top: 100%; } }
+
+        /* === 6. INTERFACE UTILISATEUR (UI) === */
+        .ui-layer {
+            position: absolute; bottom: 0; width: 100%; height: 55%;
+            z-index: 20; padding: 0 20px 40px; display: flex; flex-direction: column; justify-content: flex-end;
+        }
+        
+        .panel { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); position: absolute; bottom: 40px; left: 20px; right: 20px; }
+        .hidden { opacity: 0; transform: translateY(40px); pointer-events: none; }
+        .active { opacity: 1; transform: translateY(0); pointer-events: all; }
+
+        .jp-subtitle { font-family: 'Noto Sans JP', sans-serif; font-size: 0.7rem; color: var(--fujitsu-red); letter-spacing: 3px; margin-bottom: 5px; text-transform: uppercase; }
+        h1 { font-size: 2.2rem; font-weight: 800; line-height: 1.1; margin-bottom: 20px; letter-spacing: -1px; }
+
+        .btn-list { display: flex; flex-direction: column; gap: 10px; }
+        .btn-friction {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px); padding: 18px 20px; border-radius: 12px;
+            color: #FFF; font-size: 0.95rem; font-weight: 500; text-align: left;
+            display: flex; justify-content: space-between; align-items: center; transition: 0.3s;
+        }
+        .btn-friction .kanji { font-family: 'Noto Sans JP'; color: rgba(255,255,255,0.2); font-size: 1.2rem; transition: 0.3s;}
+        .btn-friction:active { background: rgba(255, 255, 255, 0.1); transform: scale(0.97); border-color: rgba(255,255,255,0.3); }
+
+        .form-container {
+            background: rgba(10, 10, 15, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 25px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+        }
+        .input-group { margin-bottom: 15px; position: relative; }
+        .input-group label { display: block; font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .input-group input {
+            width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.2);
+            color: #FFF; font-size: 16px; padding: 10px 0; outline: none; border-radius: 0; transition: 0.3s;
+        }
+        .input-group input:focus { border-bottom-color: var(--fujitsu-red); }
+
+        .btn-submit {
+            width: 100%; padding: 18px; margin-top: 10px; border-radius: 10px;
+            background: #FFF; color: #000; font-size: 1rem; font-weight: 800; border: none;
+            display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s;
+        }
+        .btn-submit:active { transform: scale(0.96); background: #E0E0E0; }
+
+        /* Petit texte final en bas de l'écran (après le flash) */
+        .final-msg { text-align: center; color: #888; font-size: 0.85rem; letter-spacing: 1px; line-height: 1.5; }
+        .final-msg span { color: var(--tech-cyan); font-weight: 600; }
+
+    </style>
+</head>
+<body>
+
+    <!-- LE FLASH BLANC -->
+    <div id="white-flash"></div>
+
+    <!-- PRELOADER (PORTES JAPONAISES) -->
+    <div id="shoji-doors">
+        <div class="door door-left"><span class="door-logo">FUJI</span></div>
+        <div class="door door-right"><span class="door-logo">TSU</span></div>
+    </div>
+
+    <!-- ELEMENTS DE DÉCOR -->
+    <div class="grid-overlay"></div>
+    <div class="jp-watermark">フリクション・ゼロ</div>
+
+    <!-- HEADER -->
+    <header>
+        <div class="brand-logo"><span>∞</span> FUJITSU</div>
+        <div class="iscom-tag">PROJET<br>ISCOM LILLE</div>
+    </header>
+
+    <!-- L'ARTEFACT CENTRAL (CUBE 3D) -->
+    <div class="artifact-container" id="cube-container">
+        <div class="halo" id="core-halo"></div>
+        <div class="cube" id="artifact-cube">
+            <div class="face front"></div>
+            <div class="face back"></div>
+            <div class="face right"></div>
+            <div class="face left"></div>
+            <div class="face top"></div>
+            <div class="face bottom"></div>
+            <div class="core" id="core-energy"></div>
+        </div>
+    </div>
+
+    <!-- LE TICKET VIP (DÉVOILÉ À LA FIN) -->
+    <div id="vip-pass-container">
+        <div class="vip-card">
+            <div class="vip-header">
+                <div class="logo"><span>∞</span> FUJITSU</div>
+                <div class="vip-badge">PASS ACCRÉDITÉ</div>
+            </div>
+            <div class="vip-body">
+                <div class="vip-label">Détenteur</div>
+                <div class="vip-name" id="display-name">DÉCIDEUR</div>
+                
+                <div class="vip-details">
+                    <div>
+                        <div class="vip-label">Date</div>
+                        <p>21 AVRIL 2026</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="vip-label">ID Privé</div>
+                        <p>042 / 150</p>
+                    </div>
+                </div>
+            </div>
+            <div class="vip-footer">
+                <div class="barcode">THE FRICTION ROOMS</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INTERFACE UTILISATEUR (UI) -->
+    <div class="ui-layer">
+        
+        <!-- ÉTAPE 1 : GAMIFICATION -->
+        <div id="panel-1" class="panel active">
+            <div class="jp-subtitle">体験のパーソナライズ</div>
+            <h1>Identifiez votre<br>Friction majeure.</h1>
+            
+            <div class="btn-list">
+                <button class="btn-friction" onclick="selectFriction('rgba(76, 201, 240, 0.4)', 'rgba(76, 201, 240, 0.7)')">
+                    Silos de Données & IA <span class="kanji">データ</span>
+                </button>
+                <button class="btn-friction" onclick="selectFriction('rgba(114, 9, 183, 0.4)', 'rgba(114, 9, 183, 0.7)')">
+                    Ruptures & Supply Chain <span class="kanji">供給</span>
+                </button>
+                <button class="btn-friction" onclick="selectFriction('rgba(230, 0, 18, 0.4)', 'rgba(230, 0, 18, 0.7)')">
+                    Failles Cybersécurité <span class="kanji">安全</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ÉTAPE 2 : FORMULAIRE VIP -->
+        <div id="panel-2" class="panel hidden form-container">
+            <div class="jp-subtitle">最終確認</div>
+            <h1 style="font-size: 1.5rem; margin-bottom: 5px;">Génération du Pass</h1>
+            <p style="color: #888; font-size: 0.8rem; margin-bottom: 20px;">L'artefact est synchronisé. Identifiez-vous.</p>
+
+            <form id="vip-form">
+                <div class="input-group">
+                    <label>Prénom & Nom</label>
+                    <input type="text" id="name" placeholder="John Doe" autocomplete="name" required>
+                </div>
+                <div class="input-group">
+                    <label>Email Professionnel</label>
+                    <input type="email" id="email" placeholder="john@enseigne.com" autocomplete="email" required>
+                </div>
+                <button type="submit" class="btn-submit">
+                    Générer l'Accès <span style="color: var(--fujitsu-red);">∞</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- ÉTAPE 3 : MESSAGE FINAL (SOUS LE TICKET) -->
+        <div id="panel-3" class="panel hidden final-msg">
+            <p>Artefact dématérialisé.<br>Présentez ce pass à l'accueil <span>Hall 5.1</span>.</p>
+        </div>
+
+    </div>
+
+    <!-- SCRIPTS INTERACTIFS (LA MAGIE) -->
+    <script>
+        // 1. Ouverture des portes
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('shoji-doors').classList.add('doors-open');
+                setTimeout(() => document.getElementById('shoji-doors').style.display = 'none', 1200);
+            }, 800); 
+        });
+
+        // 2. Choix de la friction
+        function selectFriction(coreColor, glowColor) {
+            document.documentElement.style.setProperty('--core-color', coreColor);
+            document.documentElement.style.setProperty('--core-glow', glowColor);
+
+            const cube = document.getElementById('artifact-cube');
+            cube.style.animationDuration = '3s'; 
+            cube.style.transform = 'scale(1.1)';
+            
+            setTimeout(() => {
+                cube.style.animationDuration = '15s'; 
+                cube.style.transform = 'scale(1)';
+            }, 1000);
+
+            const panel1 = document.getElementById('panel-1');
+            panel1.classList.remove('active');
+            panel1.classList.add('hidden');
+
+            setTimeout(() => {
+                const panel2 = document.getElementById('panel-2');
+                panel2.classList.remove('hidden');
+                panel2.classList.add('active');
+            }, 800);
+        }
+
+        // 3. LA VALIDATION (EFFET WOW - EXPLOSION DU CUBE)
+        document.getElementById('vip-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Récupérer le nom pour le mettre sur le ticket
+            const userName = document.getElementById('name').value;
+            document.getElementById('display-name').innerText = userName;
+
+            // Masquer le clavier
+            document.getElementById('name').blur();
+            document.getElementById('email').blur();
+
+            // Masquer le formulaire
+            const panel2 = document.getElementById('panel-2');
+            panel2.classList.remove('active');
+            panel2.classList.add('hidden');
+
+            // LE CUBE S'EMBALLE
+            const container = document.getElementById('cube-container');
+            const cube = document.getElementById('artifact-cube');
+            
+            // Le cube devient blanc pur et s'accélère
+            document.documentElement.style.setProperty('--core-color', '#FFFFFF');
+            document.documentElement.style.setProperty('--core-glow', '#FFFFFF');
+            container.classList.add('overdrive');
+            cube.classList.add('spinning-fast');
+
+            // LE FLASH BLANC (1.5 secondes plus tard)
+            setTimeout(() => {
+                const flash = document.getElementById('white-flash');
+                flash.style.opacity = '1';
+
+                // Pendant que l'écran est tout blanc, on échange le cube contre le Ticket VIP
+                setTimeout(() => {
+                    container.style.display = 'none'; // Le cube disparait
+                    
+                    const vipPass = document.getElementById('vip-pass-container');
+                    vipPass.style.display = 'block'; // Le ticket apparait
+                    
+                    // On dissipe le flash
+                    flash.style.opacity = '0';
+                    setTimeout(() => vipPass.style.opacity = '1', 100);
+
+                    // On affiche le petit message final en bas
+                    const panel3 = document.getElementById('panel-3');
+                    panel3.classList.remove('hidden');
+                    panel3.classList.add('active');
+
+                }, 400); // 400ms d'écran full blanc
+
+            }, 1500); // Temps pendant lequel le cube tourne à fond
+        });
+    </script>
+</body>
+</html>
